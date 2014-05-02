@@ -1,0 +1,74 @@
+#include "FloorAsset.h"
+
+FloorAsset::FloorAsset() 
+  : GameAsset(
+	      string("shaders/hello-gl.v.glsl")
+	      , string("shaders/hello-gl.f.glsl")
+	      )
+{
+  FloorAsset(0, 0, 0);
+}
+
+FloorAsset::FloorAsset(float x, float y, float z) {
+  this->li = nullptr;
+
+  // A default "unit"
+  num_vertices = 8;
+  num_triangles = 12;
+  g_vertex_buffer_data = new GLfloat[num_vertices * 3] { // three points per vertex
+
+        //x    y    z		
+	-0.5,-0.5, 0.5, //A0 (front bottom left)
+	 0.5,-0.5, 0.5, //A1 (front bottom right)
+	 0.5, 0.5, 0.5, //A2 (front top right)
+	-0.5, 0.5, 0.5, //A3 (front top left)
+	-0.5,-0.5,-0.5, //B0 (back bottom left)
+	 0.5,-0.5,-0.5, //B1 (back bottom right)
+	 0.5, 0.5,-0.5, //B2 (back top right)
+	-0.5, 0.5,-0.5, //B3 (back top left)
+};
+  
+  g_element_buffer_data = new GLushort[num_triangles * 3] { // three vertices per triangle
+
+	A0,A1,A2, //Front face
+	A0,A2,A3,
+	B0,A0,A3, //Left face
+	B0,A3,B3,
+	B0,B1,B2, //Back face
+	B0,B2,B3,
+	A1,B1,B2, //Right face
+	A1,B2,A2,
+	A3,A2,B2, //Top face
+	A3,B2,B3,
+	B0,B1,A1, //Bottom face
+	B0,A1,A0,
+};
+
+  bbox.reset();
+  bbox = shared_ptr<BoundingBox>(new BoundingBox(Point3(x, y, z), 1.0, 1.0, 1.0));
+
+  make_resources();
+}
+
+FloorAsset::~FloorAsset() {
+  // TODO: do something nice here.
+}
+
+void FloorAsset::update() {
+  if (nullptr != li) {
+    //    std::cout << "x: " << bbox->getCentre()->getX() << "\ty: " << bbox->getCentre()->getY() << "\tz:" << bbox->getCentre()->getZ() << std::endl;
+    shared_ptr<Point3> p = shared_ptr<Point3>(new Point3(this->li->update()));
+
+    bbox.reset();
+    bbox = shared_ptr<BoundingBox>(new BoundingBox(*p, 1.0, 1.0, 1.0));
+  }
+}
+
+void FloorAsset::setInterpolator(shared_ptr<IInterpolator> li) {
+  this->li.swap(li);
+}
+
+void FloorAsset::draw() {
+//  std::cout << "x: " << bbox->getCentre()->getX() << "\ty: " << bbox->getCentre()->getY() << "\tz:" << bbox->getCentre()->getZ() << std::endl;
+  GameAsset::draw();
+}
